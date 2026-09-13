@@ -40,10 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'authentication',
-    'dashboard',
-    'inventory',
-    'ai_agent'
+    'apps.authentication',
+    'apps.dashboard',
+    'apps.inventory',
+    'apps.ai_agent'
 ]
 
 MIDDLEWARE = [
@@ -132,3 +132,4 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
