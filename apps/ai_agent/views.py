@@ -1,3 +1,23 @@
-from django.shortcuts import render
+import json
 
-# Create your views here.
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+from .services.agent import run_agent
+
+
+@login_required
+@require_POST
+def chat_view(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON body."}, status=400)
+
+    message = (data.get("message") or "").strip()
+    if not message:
+        return JsonResponse({"error": "'message' is required."}, status=400)
+
+    result = run_agent(user=request.user, message=message, history=data.get("history"))
+    return JsonResponse(result)
