@@ -3,3 +3,8 @@ __pycache__/
 .env
 *.pyc 
 db.sqlite3
+DB_NAME=inventory_agent_db
+DB_USER=postgres
+DB_PASSWORD=yosef1234
+DB_HOST=localhost
+DB_PORT=5432
