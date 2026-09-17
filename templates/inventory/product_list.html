@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Stockly - إدارة المخزون</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>📦 Stockly</h2>
+        <a href="#">الرئيسية</a>
+        
+        {% if perms.inventory.view_product %}
+            <a href="{% url 'product_list' %}" style="background-color: #e8f0fe; color: #1a73e8;">المنتجات</a>
+        {% endif %}
+
+        {% if perms.inventory.view_supplier %}
+            <a href="#">الموردين</a>
+        {% endif %}
+
+        {% if perms.inventory.view_reports %}
+            <a href="#">التقارير</a>
+        {% endif %}
+    </div>
+
+    <div class="main-layout">
+        
+        <div class="content">
+            <div class="content-header">
+                <h1>قائمة المنتجات</h1>
+                {% if perms.inventory.add_product %}
+                    <a href="{% url 'add_product' %}" class="btn">+ منتج جديد</a>
+                {% endif %}
+            </div>
+
+            <table>
+                <tr>
+                    <th>اسم المنتج</th>
+                    <th>الكود</th>
+                    <th>السعر</th>
+                    <th>الكمية المتوفرة</th>
+                </tr>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.name }}</td>
+                    <td><span style="color: #5f6368; font-size: 13px;">{{ product.sku }}</span></td>
+                    <td>{{ product.selling_price }} ج.م</td>
+                    <td>
+                       <span class="{% if product.is_low_stock %}text-danger{% else %}text-success{% endif %}">
+    {{ product.stock_quantity }}
+</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #5f6368;">لا توجد بيانات حالياً.</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="chat-section">
+            <div class="chat-header">
+                ✨ المساعد الذكي
+            </div>
+            
+            <div class="chat-body" id="chatBody">
+                <div class="msg ai-msg">أهلاً بك! يمكنك الاعتماد عليّ في فحص النواقص وإعداد مسودات الشراء.</div>
+            </div>
+            
+            <div class="quick-actions">
+                <button class="chat-btn" onclick="sendQuickMessage('قم بفحص المنتجات الناقصة')">فحص النواقص</button>
+                {% if perms.inventory.can_create_draft_po %}
+                    <button class="chat-btn" onclick="sendQuickMessage('قم بإنشاء مسودات طلبات شراء')">إنشاء طلبات شراء</button>
+                {% endif %}
+            </div>
+
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" placeholder="اكتب طلبك هنا...">
+                <button onclick="sendManualMessage()">➤</button>
+            </div>
+        </div>
+
+    </div>
+
+    {% csrf_token %}
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
