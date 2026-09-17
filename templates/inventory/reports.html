@@ -1,0 +1,47 @@
+{% extends "inventory/base.html" %}
+{% block title %}تقارير المخزون{% endblock %}
+
+{% block content %}
+<h2>تقارير المخزون</h2>
+
+<div style="display:flex; gap:20px; margin-bottom:20px;">
+    <div class="card" style="flex:1; text-align:center;">
+        <div style="font-size:28px; font-weight:bold; color:#2563eb;">{{ total_products }}</div>
+        <div>إجمالي المنتجات</div>
+    </div>
+    <div class="card" style="flex:1; text-align:center;">
+        <div style="font-size:28px; font-weight:bold; color:#16a34a;">{{ total_suppliers }}</div>
+        <div>إجمالي الموردين</div>
+    </div>
+    <div class="card" style="flex:1; text-align:center;">
+        <div style="font-size:28px; font-weight:bold; color:#dc2626;">{{ low_stock_count }}</div>
+        <div>منتجات ناقصة</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>المنتجات التي أوشكت على النفاد</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>اسم المنتج</th>
+                <th>الكمية الحالية</th>
+                <th>الحد الأدنى</th>
+                <th>المورد</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in low_stock_products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td class="low-stock">{{ product.stock_quantity }}</td>
+                <td>{{ product.min_stock_level }}</td>
+                <td>{{ product.supplier.name|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">لا يوجد نواقص حالياً 👍</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

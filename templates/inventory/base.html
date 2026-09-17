@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Stockly{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, Tahoma, sans-serif; }
+        body { margin: 0; background: #f4f6f8; color: #222; }
+        .layout { display: flex; flex-direction: row-reverse; min-height: 100vh; }
+
+        .sidebar {
+            width: 220px;
+            background: #ffffff;
+            border-left: 1px solid #e5e7eb;
+            padding: 20px;
+        }
+        .sidebar h1 { font-size: 20px; color: #2563eb; margin: 0 0 30px 0; }
+        .sidebar a {
+            display: block;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            color: #374151;
+            text-decoration: none;
+        }
+        .sidebar a:hover { background: #f3f4f6; }
+        .sidebar a.active { background: #e0e7ff; color: #2563eb; font-weight: bold; }
+
+        .content { flex: 1; padding: 25px; }
+        .content h2 { margin-top: 0; }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: right; border-bottom: 1px solid #eee; }
+        th { color: #6b7280; font-size: 14px; }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .btn-blue { background: #2563eb; color: #fff; }
+        .btn-green { background: #16a34a; color: #fff; }
+
+        input[type=text], input[type=email], input[type=number], textarea, select {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        label { font-size: 14px; color: #374151; }
+        .low-stock { color: #dc2626; font-weight: bold; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <h1>Stockly 📦</h1>
+            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">الرئيسية</a>
+            <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">المنتجات</a>
+            <a href="{% url 'supplier_list' %}" class="{% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}">الموردين</a>
+            <a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">التقارير</a>
+        </div>
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>
