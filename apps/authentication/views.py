@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 
 def login_view(request):
+    error=None
     if request.method == 'POST':
         username_input = request.POST.get('username')
         password_input = request.POST.get('password')
@@ -16,8 +17,5 @@ def login_view(request):
             else:
                 return redirect('/')
         else:
-            return render(request, 'authentication/login.html', {'error': 'اسم المستخدم أو كلمة المرور غير صحيحة'})
-            
-    return render(request, 'authentication/login.html')
-
-# Create your views here.
+           error= "اسم المستخدم او كلمة المرور غير صحيحة"
+    return render(request,'authentication/login.html',{'error':error})

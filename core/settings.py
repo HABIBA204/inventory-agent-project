@@ -144,3 +144,6 @@ MAILERS = {
     },
 }
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+STATICFILES_DIRS=[
+    BASE_DIR / 'static',
+]
