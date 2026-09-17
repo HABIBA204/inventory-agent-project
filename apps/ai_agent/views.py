@@ -19,5 +19,9 @@ def chat_view(request):
     if not message:
         return JsonResponse({"error": "'message' is required."}, status=400)
 
-    result = run_agent(user=request.user, message=message, history=data.get("history"))
+    try:
+        result = run_agent(user=request.user, message=message, history=data.get("history"))
+    except Exception as exc:
+        return JsonResponse({"error": f"حصل خطأ أثناء تنفيذ الطلب: {exc}"}, status=500)
+
     return JsonResponse(result)
