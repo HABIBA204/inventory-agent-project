@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-from .services.agent import run_agent
+from .services.agent import run_agent, AgentUnavailableError
 
 
 @login_required
@@ -21,6 +21,9 @@ def chat_view(request):
 
     try:
         result = run_agent(user=request.user, message=message, history=data.get("history"))
+    except AgentUnavailableError as exc:
+        # الموديل مشغول بعد كل محاولات إعادة الاتصال - رسالة عربي واضحة بدل الخطأ الخام
+        return JsonResponse({"error": str(exc)}, status=503)
     except Exception as exc:
         return JsonResponse({"error": f"حصل خطأ أثناء تنفيذ الطلب: {exc}"}, status=500)
 

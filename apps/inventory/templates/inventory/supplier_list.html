@@ -1,0 +1,46 @@
+{% extends "inventory/base.html" %}
+{% block title %}قائمة الموردين{% endblock %}
+
+{% block content %}
+<h2>قائمة الموردين</h2>
+
+<div style="display:flex; gap:20px; align-items:flex-start;">
+
+    <!-- جدول الموردين -->
+    <div class="card" style="flex:2;">
+        <table>
+            <thead>
+                <tr>
+                    <th>اسم المورد</th>
+                    <th>الشخص المسؤول</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>الهاتف</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in suppliers %}
+                <tr>
+                    <td>{{ supplier.name }}</td>
+                    <td>{{ supplier.contact_person|default:"—" }}</td>
+                    <td>{{ supplier.email|default:"—" }}</td>
+                    <td>{{ supplier.phone|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">لا يوجد موردين مضافين بعد.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- فورم إضافة مورد -->
+    <div class="card" style="flex:1; min-width:280px;">
+        <h3 style="margin-top:0;">+ إضافة مورد جديد</h3>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-green" style="width:100%;">حفظ المورد</button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

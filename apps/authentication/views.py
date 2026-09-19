@@ -16,7 +16,7 @@ def login_view(request):
             else:
                 return redirect('/')
         else:
-            return render(request, 'authentication/login.html', {'error': 'اسم المستخدم أو كلمة المرور غير صحيحة'})
+            return render(request, 'authentication/login.html', {'error': 'Username or password is Wroung'})
             
     return render(request, 'authentication/login.html')
 

@@ -1,3 +1,5 @@
+import time
+
 from google import genai
 from google.genai import types
 from django.conf import settings
@@ -7,6 +9,10 @@ from apps.inventory.services import create_draft_purchase_orders, get_low_stock_
 
 MODEL = "gemini-3.8-flash"
 MAX_TOOL_ROUNDS = 5
+
+# عدد محاولات إعادة الاتصال لو الموديل مشغول (503) قبل ما نستسلم
+MAX_RETRIES = 3
+RETRY_DELAY_SECONDS = 3
 
 SYSTEM_INSTRUCTION = (
     
@@ -42,6 +48,11 @@ _CREATE_DRAFT_POS = types.FunctionDeclaration(
 )
 
 TOOLS = [types.Tool(function_declarations=[_GET_LOW_STOCK, _CREATE_DRAFT_POS])]
+
+
+class AgentUnavailableError(Exception):
+    """بترفع لما الموديل يفضل مشغول بعد كل المحاولات."""
+    pass
 
 
 def _execute_tool(name, args, user):
@@ -97,6 +108,36 @@ def _deserialize_history(raw_history):
     return [types.Content.model_validate(item) for item in (raw_history or [])]
 
 
+def _generate_with_retry(client, contents, config):
+    """
+    بينادي Gemini، ولو رجع خطأ إن الموديل مشغول (503/UNAVAILABLE)
+    بيعيد المحاولة كذا مرة مع انتظار بسيط بينهم قبل ما يستسلم.
+    """
+    last_error = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            return client.models.generate_content(model=MODEL, contents=contents, config=config)
+        except Exception as exc:
+            last_error = exc
+            error_text = str(exc)
+            is_busy = "503" in error_text or "UNAVAILABLE" in error_text or "overloaded" in error_text.lower()
+
+            if is_busy and attempt < MAX_RETRIES:
+                time.sleep(RETRY_DELAY_SECONDS)
+                continue
+
+            if is_busy:
+                raise AgentUnavailableError(
+                    "الخدمة مزدحمة حالياً (الموديل بيستقبل طلبات كتير). "
+                    "جرب تبعت الرسالة تاني بعد شوية."
+                ) from exc
+
+            # أي خطأ تاني غير الازدحام بنرفعه زي ما هو
+            raise
+
+    raise AgentUnavailableError("تعذر الوصول للخدمة، حاول لاحقاً.") from last_error
+
+
 def run_agent(user, message, history=None):
     client = genai.Client(api_key=settings.GEMINI_API_KEY)
     contents = _deserialize_history(history)
@@ -112,7 +153,7 @@ def run_agent(user, message, history=None):
     reply_text = ""
 
     for _ in range(MAX_TOOL_ROUNDS):
-        response = client.models.generate_content(model=MODEL, contents=contents, config=config)
+        response = _generate_with_retry(client, contents, config)
         model_content = response.candidates[0].content
         contents.append(model_content)
 

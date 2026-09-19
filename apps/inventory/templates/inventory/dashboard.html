@@ -1,0 +1,14 @@
+{% extends "inventory/base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+<div class="card">
+    <h3>Welcome to the Stockly inventory management system</h3>
+    <p>Use the sidebar to navigate between products, suppliers, and reports</p>
+
+    <a href="{% url 'add_product' %}" class="btn btn-green">+ Quick Add Product</a>
+    <a href="{% url 'product_list' %}" class="btn btn-blue">Show Products</a>
+</div>
+{% endblock %}
