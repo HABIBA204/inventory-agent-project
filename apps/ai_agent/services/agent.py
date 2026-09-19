@@ -5,7 +5,12 @@ from google.genai import types
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
-from apps.inventory.services import create_draft_purchase_orders, get_low_stock_products
+from apps.inventory.services import (
+    create_draft_purchase_orders,
+    get_low_stock_products,
+    get_open_draft_orders,
+    decrease_product_stock,
+)
 
 MODEL = "gemini-3.8-flash"
 MAX_TOOL_ROUNDS = 5
@@ -15,16 +20,30 @@ MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 3
 
 SYSTEM_INSTRUCTION = (
-    
     "أنت مساعد ذكي داخل نظام إدارة مخزون ومبيعات. مهمتك مساعدة المستخدم في "
     "متابعة المخزون وإعداد مسودات طلبات شراء للمنتجات التي أوشكت على النفاد. "
     "استخدم الأدوات المتاحة لك دائماً بدلاً من افتراض أي بيانات، ولا تنشئ "
-    "مسودة طلب شراء إلا بعد موافقة صريحة من المستخدم. اجعل ردودك مختصرة وواضحة."
+    "مسودة طلب شراء إلا بعد موافقة صريحة من المستخدم، ولا تُقلل كمية أي منتج "
+    "إلا بعد ما تأكد من اسم المنتج والكمية بوضوح من المستخدم، لأن ده بيغيّر "
+    "بيانات حقيقية في المخزون. لاحظ أن النظام قد يكون جهّز مسودات طلبات شراء "
+    "تلقائياً بالفعل لبعض المنتجات الناقصة - استخدم أداة get_open_draft_orders "
+    "لمعرفة هل يوجد طلب مفتوح بالفعل قبل ما تنشئ طلب جديد لنفس المنتج. "
+    "اجعل ردودك مختصرة وواضحة."
 )
 
 _GET_LOW_STOCK = types.FunctionDeclaration(
     name="get_low_stock_products",
     description="Returns every product whose stock is at or below its minimum stock level.",
+    parameters_json_schema={"type": "object", "properties": {}},
+)
+
+_GET_OPEN_ORDERS = types.FunctionDeclaration(
+    name="get_open_draft_orders",
+    description=(
+        "Returns all currently open (draft status) purchase orders, whether created "
+        "automatically by the system when stock dropped low, or manually by a user. "
+        "Use this before creating a new order to avoid duplicating an existing one."
+    ),
     parameters_json_schema={"type": "object", "properties": {}},
 )
 
@@ -47,7 +66,36 @@ _CREATE_DRAFT_POS = types.FunctionDeclaration(
     },
 )
 
-TOOLS = [types.Tool(function_declarations=[_GET_LOW_STOCK, _CREATE_DRAFT_POS])]
+_DECREASE_STOCK = types.FunctionDeclaration(
+    name="decrease_product_stock",
+    description=(
+        "Decreases the stock quantity of one specific product by a given amount "
+        "(for example, to record a sale or a manual stock correction). "
+        "Only call this after the user has clearly confirmed both the exact "
+        "product name and the quantity, since this changes real inventory data."
+    ),
+    parameters_json_schema={
+        "type": "object",
+        "properties": {
+            "product_name": {
+                "type": "string",
+                "description": "The name (or part of the name) of the product to update.",
+            },
+            "quantity": {
+                "type": "integer",
+                "description": "How many units to subtract from the current stock.",
+            },
+        },
+        "required": ["product_name", "quantity"],
+    },
+)
+
+TOOLS = [types.Tool(function_declarations=[
+    _GET_LOW_STOCK,
+    _GET_OPEN_ORDERS,
+    _CREATE_DRAFT_POS,
+    _DECREASE_STOCK,
+])]
 
 
 class AgentUnavailableError(Exception):
@@ -69,6 +117,23 @@ def _execute_tool(name, args, user):
                     "supplier": p.supplier.name if p.supplier else None,
                 }
                 for p in products
+            ]
+        }
+
+    if name == "get_open_draft_orders":
+        orders = get_open_draft_orders()
+        return {
+            "orders": [
+                {
+                    "id": po.id,
+                    "supplier": po.supplier.name if po.supplier else "Unknown",
+                    "total_cost": str(po.total_cost),
+                    "created_automatically": po.created_by_id is None,
+                    "items": [
+                        {"product": i.product.name, "quantity": i.quantity} for i in po.item.all()
+                    ],
+                }
+                for po in orders
             ]
         }
 
@@ -95,6 +160,35 @@ def _execute_tool(name, args, user):
                 }
                 for po in orders
             ],
+        }
+
+    if name == "decrease_product_stock":
+        try:
+            product = decrease_product_stock(
+                user=user,
+                product_name=args.get("product_name", ""),
+                quantity=int(args.get("quantity", 0)),
+            )
+        except PermissionDenied as exc:
+            return {"success": False, "error": str(exc)}
+        except (ValueError, TypeError) as exc:
+            return {"success": False, "error": str(exc)}
+
+        if not product:
+            return {
+                "success": False,
+                "message": f"لم يتم العثور على منتج بالاسم: {args.get('product_name')}",
+            }
+
+        return {
+            "success": True,
+            "product": {
+                "id": product.id,
+                "name": product.name,
+                "stock_quantity": product.stock_quantity,
+                "min_stock_level": product.min_stock_level,
+                "is_low_stock": product.is_low_stock,
+            },
         }
 
     return {"error": f"Unknown tool: {name}"}
@@ -132,7 +226,6 @@ def _generate_with_retry(client, contents, config):
                     "جرب تبعت الرسالة تاني بعد شوية."
                 ) from exc
 
-            # أي خطأ تاني غير الازدحام بنرفعه زي ما هو
             raise
 
     raise AgentUnavailableError("تعذر الوصول للخدمة، حاول لاحقاً.") from last_error

@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 
 from .forms import ProductForm, SupplierForm
 from .models import Product, Supplier
+from .services import auto_generate_draft_orders, get_open_draft_orders
 
 
 @login_required(login_url='/admin/login/')
@@ -21,13 +22,25 @@ def add_product_view(request):
 @login_required
 @permission_required('inventory.view_product', raise_exception=True)
 def product_list_view(request):
+    # كشف تلقائي: لو أي منتج قل عن الحد الأدنى، يتجهزله مسودة طلب شراء من غير ما حد يطلب
+    auto_created_orders = auto_generate_draft_orders()
+
     products = Product.objects.all().select_related('supplier')
-    return render(request, 'inventory/product_list.html', {'products': products})
+    return render(
+        request,
+        'inventory/product_list.html',
+        {'products': products, 'auto_created_orders': auto_created_orders},
+    )
 
 
 @login_required
 def dashboard_view(request):
-    return render(request, 'inventory/dashboard.html')
+    auto_created_orders = auto_generate_draft_orders()
+    return render(
+        request,
+        'inventory/dashboard.html',
+        {'auto_created_orders': auto_created_orders},
+    )
 
 
 @login_required
@@ -59,5 +72,6 @@ def reports_view(request):
         'total_suppliers': Supplier.objects.count(),
         'low_stock_products': low_stock_products,
         'low_stock_count': len(low_stock_products),
+        'draft_orders': get_open_draft_orders(),
     }
     return render(request, 'inventory/reports.html', context)
