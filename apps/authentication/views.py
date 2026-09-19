@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 
 def login_view(request):
+    error=None
     if request.method == 'POST':
         username_input = request.POST.get('username')
         password_input = request.POST.get('password')

@@ -27,13 +27,13 @@ async function sendMessageToAI(message) {
         const data = await response.json();
         
         if (response.ok) {
-            appendMessage(data.response || data.reply || "تم.", 'ai');
+            appendMessage(data.response || data.reply || "Done.", 'ai');
         } else {
-            appendMessage("خطأ: " + (data.error || "غير معروف"), 'ai');
+            appendMessage("Error: " + (data.error || "UnKnown "), 'ai');
         }
 
     } catch (error) {
-        appendMessage('تعذر الاتصال بالخادم.', 'ai');
+        appendMessage('Bad Connecting.', 'ai');
     }
 }
 

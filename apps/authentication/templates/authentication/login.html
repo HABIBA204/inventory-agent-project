@@ -1,28 +1,51 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تسجيل الدخول</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول للنظام</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h2>تسجيل الدخول للنظام</h2>
 
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
-    {% endif %}
+    <div class="login-card">
+        <div class="text-center">
+            <div class="logo-container">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+            </div>
+            <h1>تسجيل الدخول للنظام</h1>
+            <p class="subtitle">مرحباً بك مجدداً، يرجى إدخال بيانات حسابك</p>
+        </div>
 
-    <form method="POST" action="{% url 'login' %}">
-        {% csrf_token %}
-        
-        <label for="username">اسم المستخدم:</label>
-        <input type="text" id="username" name="username" required>
-        <br><br>
-        
-        <label for="password">كلمة المرور:</label>
-        <input type="password" id="password" name="password" required>
-        <br><br>
-        
-        <button type="submit">دخول</button>
-    </form>
+        <form method="POST">
+            {% csrf_token %}
+
+            {% if error %}
+            <div class="error-box">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label>اسم المستخدم</label>
+                <input type="text" name="username" required placeholder="أدخل اسم المستخدم">
+            </div>
+
+            <div class="form-group password-group">
+                <label>كلمة المرور</label>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="submit-btn">دخول للنظام</button>
+        </form>
+
+        <div class="footer-text">
+            نظام إدارة المخزون الذكي &copy; 2026
+        </div>
+    </div>
+
 </body>
 </html>
