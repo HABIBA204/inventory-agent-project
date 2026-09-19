@@ -7,19 +7,19 @@
     <!-- جدول المنتجات -->
     <div style="flex:2;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2>قائمة المنتجات</h2>
-            <a href="{% url 'add_product' %}" class="btn btn-blue">+ منتج جديد</a>
+            <h2>List Items</h2>
+            <a href="{% url 'add_product' %}" class="btn btn-blue">+ new product</a>
         </div>
 
         <div class="card">
             <table>
                 <thead>
                     <tr>
-                        <th>اسم المنتج</th>
-                        <th>الكود (SKU)</th>
-                        <th>السعر</th>
-                        <th>الكمية المتوفرة</th>
-                        <th>المورد</th>
+                        <th>Product name</th>
+                        <th>Code(SKU)</th>
+                        <th>price</th>
+                        <th>available ammount</th>
+                        <th>supplier</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -32,7 +32,7 @@
                         <td>{{ product.supplier.name|default:"—" }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5">لا توجد منتجات بعد.</td></tr>
+                    <tr><td colspan="5">there are not any products later</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -41,24 +41,24 @@
 
     <!-- المساعد الذكي -->
     <div style="flex:1; min-width:300px; max-width:340px; position: sticky; top: 20px;">
-        <h3 style="color:#2563eb; margin-top:0;"> المساعد الذكي</h3>
+        <h3 style="color:#2563eb; margin-top:0;"> AI tool</h3>
 
         <div class="card" style="display:flex; flex-direction:column; height:460px; padding:0;">
 
             <div id="chat-window" style="flex:1; overflow-y:auto; padding:15px;">
                 <div class="chat-bubble bot">
-                    أهلاً بك! يمكنك الاعتماد عليّ في فحص النواقص وإعداد مسودات الشراء.
+                    HI! you can rely on me to check for shortages and prepare purchase drafts.
                 </div>
             </div>
 
             <div style="padding:10px; border-top:1px solid #eee; display:flex; gap:8px;">
-                <button type="button" class="btn" style="background:#f3f4f6; flex:1;" onclick="sendQuickMessage('اعرض لي طلبات الشراء المطلوبة')">طلبات الشراء</button>
-                <button type="button" class="btn" style="background:#f3f4f6; flex:1;" onclick="sendQuickMessage('افحص المنتجات الناقصة في المخزون')">فحص النواقص</button>
+                <button type="button" class="btn" style="background:#f3f4f6; flex:1;" onclick="sendQuickMessage('show me all purchase order')">purchase order</button>
+                <button type="button" class="btn" style="background:#f3f4f6; flex:1;" onclick="sendQuickMessage('check all shortages product in stock')">checking for shortages</button>
             </div>
 
             <form id="chat-form" style="padding:10px; border-top:1px solid #eee; display:flex; gap:8px;">
                 {% csrf_token %}
-                <input type="text" id="chat-input" placeholder="اكتب طلبك هنا..." autocomplete="off">
+                <input type="text" id="chat-input" placeholder="write your ask here..." autocomplete="off">
                 <button type="submit" id="chat-send-btn" class="btn btn-blue">➤</button>
             </form>
 
@@ -117,7 +117,7 @@
         setLoading(true);
 
         // مؤشر "بيكتب..." لحد ما يجيله الرد
-        var typingBubble = addBubble('المساعد بيفكر...', 'typing');
+        var typingBubble = addBubble('assistant is thinking...', 'typing');
 
         // مهلة 30 ثانية: لو الرد اتأخر أكتر من كدا نوقف الطلب ونطلع رسالة واضحة
         var controller = new AbortController();
@@ -145,7 +145,7 @@
         .then(function(result) {
             typingBubble.remove();
             if (!result.ok) {
-                addBubble(result.data.error || 'حصل خطأ غير معروف.', 'error');
+                addBubble(result.data.error || 'unknown error is happened', 'error');
                 return;
             }
             chatHistory = result.data.history || chatHistory;
@@ -154,9 +154,9 @@
         .catch(function(err) {
             typingBubble.remove();
             if (err.name === 'AbortError') {
-                addBubble('الطلب استغرق وقت طويل جداً، حاول تاني.', 'error');
+                addBubble('the request took too long ,please try again', 'error');
             } else {
-                addBubble('تعذر الاتصال بالسيرفر: ' + err, 'error');
+                addBubble('Failed to connect to the server ' + err, 'error');
             }
         })
         .finally(function() {
