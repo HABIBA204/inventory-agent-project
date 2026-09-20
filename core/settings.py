@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apps.authentication',
-    'apps.dashboard',
+    
     'apps.inventory',
     'apps.ai_agent'
 ]
@@ -147,5 +147,5 @@ MAILERS = {
 }
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-
+LOGIN_REDIRECT_URL = 'dashboard'
 LOGIN_URL='/auth/login/'

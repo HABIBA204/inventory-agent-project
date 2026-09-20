@@ -23,4 +23,5 @@ urlpatterns = [
     path('', include('apps.inventory.urls')),
     path('api/agent/', include('apps.ai_agent.urls')),
     path('auth/', include('apps.authentication.urls')), 
+
 ]

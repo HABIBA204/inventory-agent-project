@@ -10,15 +10,10 @@ def login_view(request):
         user = authenticate(request, username=username_input, password=password_input)
         
         if user is not None:
-            login(request, user)
-            
-            if user.groups.filter(name='Owner').exists():
-                return redirect('/')
-            else:
-                return redirect('/')
-        else:
-            return render(request, 'authentication/login.html', {'error': 'Username or password is Wroung'})
-            
-    return render(request, 'authentication/login.html')
+           login(request, user)
+           return redirect('dashboard')
+    else:
+         return render(request, 'authentication/login.html', {'error': 'Username or password is Wroung'})
+        
 
 # Create your views here.

@@ -1,0 +1,15 @@
+{% extends "inventory/base.html" %}
+{% block title %}تعديل منتج{% endblock %}
+
+{% block content %}
+<h2>تعديل: {{ product.name }}</h2>
+
+<div class="card" style="max-width:500px;">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-blue">حفظ التعديلات</button>
+        <a href="{% url 'product_list' %}" class="btn" style="background:#e5e7eb; color:#111;">إلغاء</a>
+    </form>
+</div>
+{% endblock %}

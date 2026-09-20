@@ -4,11 +4,127 @@
 {% block content %}
 <h2>Dashboard</h2>
 
-<div class="card">
-    <h3>Welcome to the Stockly inventory management system</h3>
-    <p>Use the sidebar to navigate between products, suppliers, and reports</p>
-
-    <a href="{% url 'add_product' %}" class="btn btn-green">+ Quick Add Product</a>
-    <a href="{% url 'product_list' %}" class="btn btn-blue">Show Products</a>
+{% if auto_created_orders %}
+<div class="card" style="background:#ecfdf5; border:1px solid #6ee7b7;">
+    <strong>تم إنشاء {{ auto_created_orders|length }} مسودة طلب شراء تلقائياً</strong>
+    <ul style="margin:8px 0 0 0;">
+        {% for order in auto_created_orders %}
+        <li>طلب #{{ order.id }} — المورد: {{ order.supplier.name|default:"—" }} — الإجمالي: {{ order.total_cost }} ج.م</li>
+        {% endfor %}
+    </ul>
 </div>
+{% endif %}
+
+{% if is_owner %}
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="value">{{ total_products }}</div>
+        <div class="label">عدد المنتجات</div>
+    </div>
+    <div class="kpi-card">
+        <div class="value">{{ total_suppliers }}</div>
+        <div class="label">عدد الموردين</div>
+    </div>
+    <div class="kpi-card">
+        <div class="value">{{ total_sales|floatformat:2 }}</div>
+        <div class="label">إجمالي المبيعات</div>
+    </div>
+    <div class="kpi-card">
+        <div class="value">{{ total_purchases|floatformat:2 }}</div>
+        <div class="label">إجمالي المشتريات</div>
+    </div>
+    <div class="kpi-card">
+        <div class="value">{{ net_profit|floatformat:2 }}</div>
+        <div class="label">صافي الربح</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">إدارة المستخدمين والصلاحيات</h3>
+    <table>
+        <thead>
+            <tr><th>المستخدم</th><th>الدور</th></tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.groups.all|join:", "|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">آخر عمليات الشراء</h3>
+    <table>
+        <thead>
+            <tr><th>#</th><th>المورد</th><th>الحالة</th><th>الإجمالي</th><th>التاريخ</th></tr>
+        </thead>
+        <tbody>
+            {% for p in recent_purchases %}
+            <tr>
+                <td>{{ p.id }}</td>
+                <td>{{ p.supplier.name|default:"—" }}</td>
+                <td>{{ p.status }}</td>
+                <td>{{ p.total_cost }}</td>
+                <td>{{ p.created_at|date:"Y-m-d" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">لا يوجد عمليات شراء بعد</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">آخر عمليات البيع</h3>
+    <table>
+        <thead>
+            <tr><th>#</th><th>الإجمالي</th><th>التاريخ</th></tr>
+        </thead>
+        <tbody>
+            {% for s in recent_sales %}
+            <tr>
+                <td>{{ s.id }}</td>
+                <td>{{ s.total_amount }}</td>
+                <td>{{ s.created_at|date:"Y-m-d" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">لا يوجد عمليات بيع بعد</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+
+<div class="card">
+    <h3 style="margin-top:0;">Welcome to the Stockly inventory management system</h3>
+    <p>Use the sidebar to navigate between products, suppliers, and reports</p>
+    <a href="{% url 'product_list' %}" class="btn btn-blue">Show Products</a>
+    <a href="{% url 'add_product' %}" class="btn btn-green">Quick Add Product +</a>
+</div>
+
+{% endif %}
+
+<style>
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .kpi-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        text-align: center;
+    }
+    .kpi-card .value { font-size: 22px; font-weight: bold; color: #16a34a; }
+    .kpi-card .label { color: #6b7280; font-size: 13px; margin-top: 4px; }
+</style>
 {% endblock %}

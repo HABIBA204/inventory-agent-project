@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة تحكم المالك</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 24px; }
+    h1 { color: #1e293b; }
+    h2 { color: #334155; margin-top: 32px; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .kpi-card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .kpi-card .value { font-size: 24px; font-weight: bold; color: #0f766e; }
+    .kpi-card .label { color: #64748b; font-size: 14px; margin-top: 4px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+    th, td { padding: 10px 14px; text-align: right; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; color: #334155; }
+
+    .actions button {
+      margin-left: 6px;
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-add { background: #0f766e; color: white; }
+    .btn-edit { background: #f59e0b; color: white; }
+    .btn-delete { background: #dc2626; color: white; }
+  </style>
+</head>
+<body>
+
+  <h1>مرحباً بك، لوحة تحكم المالك</h1>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="value">{{ total_sales|floatformat:2 }}</div>
+      <div class="label">إجمالي المبيعات</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">{{ total_purchases|floatformat:2 }}</div>
+      <div class="label">إجمالي المشتريات</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">{{ net_profit|floatformat:2 }}</div>
+      <div class="label">صافي الربح</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">{{ total_products }}</div>
+      <div class="label">عدد المنتجات</div>
+    </div>
+    <div class="kpi-card">
+      <div class="value">{{ total_suppliers }}</div>
+      <div class="label">عدد الموردين</div>
+    </div>
+  </div>
+
+  <h2>إدارة المستخدمين والصلاحيات</h2>
+  <table>
+    <tr><th>المستخدم</th><th>الدور</th></tr>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.username }}</td>
+      <td>{{ u.groups.all|join:", " }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>آخر عمليات الشراء</h2>
+  <table>
+    <tr><th>#</th><th>المورد</th><th>الحالة</th><th>الإجمالي</th><th>التاريخ</th></tr>
+    {% for p in recent_purchases %}
+    <tr>
+      <td>{{ p.id }}</td>
+      <td>{{ p.supplier.name }}</td>
+      <td>{{ p.status }}</td>
+      <td>{{ p.total_cost }}</td>
+      <td>{{ p.created_at|date:"Y-m-d" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>آخر عمليات البيع</h2>
+  <table>
+    <tr><th>#</th><th>الإجمالي</th><th>التاريخ</th></tr>
+    {% for s in recent_sales %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>{{ s.total_amount }}</td>
+      <td>{{ s.created_at|date:"Y-m-d" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>العمليات</h2>
+  <div class="actions">
+    <button class="btn-add">إضافة</button>
+    <button class="btn-edit">تعديل</button>
+    <button class="btn-delete">حذف</button>
+  </div>
+
+</body>
+</html>
