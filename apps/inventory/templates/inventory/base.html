@@ -72,7 +72,9 @@
             <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">الرئيسية</a>
             <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">المنتجات</a>
             <a href="{% url 'supplier_list' %}" class="{% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}">الموردين</a>
+            {% if perms.inventory.can_create_draft_po %}
             <a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">التقارير</a>
+            {% endif %}
         </div>
         <div class="content">
             {% block content %}{% endblock %}

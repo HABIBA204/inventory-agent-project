@@ -1,15 +1,27 @@
 import json
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-from .services.agent import run_agent, AgentUnavailableError
+from .services.agent import run_agent
 
 
 @login_required
+@permission_required('inventory.can_create_draft_po', raise_exception=True)
 @require_POST
 def chat_view(request):
+    """
+    POST body: {"message": "...", "history": [...]}   (history optional —
+    it's whatever this endpoint returned last time, the frontend just
+    stores it and sends it back so the conversation continues).
+
+    Response: {"reply": "...", "actions": [...], "history": [...]}
+
+    استخدام الشات بوت كله محجوز لصاحب صلاحية can_create_draft_po (المالك
+    حالياً)، مش بس عملية إنشاء المسودة. أي مستخدم تاني هياخد 403 قبل ما
+    يوصل لـ Gemini أصلاً.
+    """
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -19,12 +31,5 @@ def chat_view(request):
     if not message:
         return JsonResponse({"error": "'message' is required."}, status=400)
 
-    try:
-        result = run_agent(user=request.user, message=message, history=data.get("history"))
-    except AgentUnavailableError as exc:
-        # الموديل مشغول بعد كل محاولات إعادة الاتصال - رسالة عربي واضحة بدل الخطأ الخام
-        return JsonResponse({"error": str(exc)}, status=503)
-    except Exception as exc:
-        return JsonResponse({"error": f"حصل خطأ أثناء تنفيذ الطلب: {exc}"}, status=500)
-
+    result = run_agent(user=request.user, message=message, history=data.get("history"))
     return JsonResponse(result)

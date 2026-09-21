@@ -101,11 +101,42 @@
 
 {% else %}
 
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="value">{{ total_products }}</div>
+        <div class="label">عدد المنتجات المتاحة</div>
+    </div>
+    <div class="kpi-card">
+        <div class="value" style="color:#dc2626;">{{ low_stock_products|length }}</div>
+        <div class="label">منتجات قاربت على النفاد</div>
+    </div>
+</div>
+
 <div class="card">
-    <h3 style="margin-top:0;">Welcome to the Stockly inventory management system</h3>
-    <p>Use the sidebar to navigate between products, suppliers, and reports</p>
-    <a href="{% url 'product_list' %}" class="btn btn-blue">Show Products</a>
-    <a href="{% url 'add_product' %}" class="btn btn-green">Quick Add Product +</a>
+    <h3 style="margin-top:0;">اختصارات سريعة</h3>
+    <a href="{% url 'add_product' %}" class="btn btn-green">+ إضافة منتج جديد</a>
+    {# زرار تسجيل بيع/شراء سريع هيتضاف هنا لما نبني الميزة دي #}
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">تنبيهات المخزون</h3>
+    <table>
+        <thead>
+            <tr><th>المنتج</th><th>الكمية المتاحة</th><th>الحد الأدنى</th><th>المورد</th></tr>
+        </thead>
+        <tbody>
+            {% for p in low_stock_products %}
+            <tr>
+                <td>{{ p.name }}</td>
+                <td class="low-stock">{{ p.stock_quantity }}</td>
+                <td>{{ p.min_stock_level }}</td>
+                <td>{{ p.supplier.name|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">مفيش منتجات ناقصة دلوقتي</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 {% endif %}

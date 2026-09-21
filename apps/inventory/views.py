@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render, redirect
 
 from .forms import ProductForm, SupplierForm
 from .models import Product, Purchase, Sale, Supplier
-from .services import auto_generate_draft_orders, get_open_draft_orders
+from .services import auto_generate_draft_orders, get_low_stock_products, get_open_draft_orders
 
 User = get_user_model()
 
@@ -68,7 +69,7 @@ def dashboard_view(request):
     is_owner. لو مش Owner، بياخد نفس الصفحة بس النسخة المبسطة.
     """
     auto_created_orders = auto_generate_draft_orders()
-    is_owner = request.user.groups.filter(name='Owner').exists()
+    is_owner = request.user.is_superuser or request.user.groups.filter(name='Owner').exists()
 
     context = {
         'auto_created_orders': auto_created_orders,
@@ -89,6 +90,11 @@ def dashboard_view(request):
             'recent_purchases': Purchase.objects.select_related('supplier').order_by('-created_at')[:10],
             'recent_sales': Sale.objects.order_by('-created_at')[:10],
         })
+    else:
+        context.update({
+            'total_products': Product.objects.count(),
+            'low_stock_products': get_low_stock_products(),
+        })
 
     return render(request, 'inventory/dashboard.html', context)
 
@@ -96,13 +102,15 @@ def dashboard_view(request):
 @login_required
 @permission_required('inventory.view_supplier', raise_exception=True)
 def supplier_list_view(request):
+    form = SupplierForm()
+
     if request.method == 'POST':
+        if not request.user.has_perm('inventory.add_supplier'):
+            raise PermissionDenied("You don't have permission to add suppliers.")
         form = SupplierForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('supplier_list')
-    else:
-        form = SupplierForm()
 
     suppliers = Supplier.objects.all().order_by('name')
     return render(
