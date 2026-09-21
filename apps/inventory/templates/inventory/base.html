@@ -13,6 +13,8 @@
             background: #ffffff;
             border-left: 1px solid #e5e7eb;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
         .sidebar h1 { font-size: 20px; color: #2563eb; margin: 0 0 30px 0; }
         .sidebar a {
@@ -25,6 +27,8 @@
         }
         .sidebar a:hover { background: #f3f4f6; }
         .sidebar a.active { background: #e0e7ff; color: #2563eb; font-weight: bold; }
+        .sidebar .nav-links { flex: 1; }
+        .sidebar .logout-link { color: #dc2626; border-top: 1px solid #eee; margin-top: 10px; padding-top: 15px; }
 
         .content { flex: 1; padding: 25px; }
         .content h2 { margin-top: 0; }
@@ -68,13 +72,17 @@
 <body>
     <div class="layout">
         <div class="sidebar">
-            <h1>Mowaredk</h1>
-            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">الرئيسية</a>
-            <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">المنتجات</a>
-            <a href="{% url 'supplier_list' %}" class="{% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}">الموردين</a>
-            {% if perms.inventory.can_create_draft_po %}
-            <a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">التقارير</a>
-            {% endif %}
+            <h1>Stockly 📦</h1>
+            <div class="nav-links">
+                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">الرئيسية</a>
+                <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">المنتجات</a>
+                <a href="{% url 'supplier_list' %}" class="{% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}">الموردين</a>
+
+                {% if not is_employee %}
+                <a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">التقارير</a>
+                {% endif %}
+            </div>
+            <a href="{% url 'logout' %}" class="logout-link">🚪 تسجيل الخروج</a>
         </div>
         <div class="content">
             {% block content %}{% endblock %}
