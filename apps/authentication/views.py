@@ -12,10 +12,8 @@ def login_view(request):
         if user is not None:
             login(request, user)
             
-            if user.groups.filter(name='Owner').exists():
-                return redirect('/')
-            else:
-                return redirect('/')
+            
+            return redirect('/')
         else:
             return render(request, 'authentication/login.html', {'error': 'اسم المستخدم أو كلمة المرور غير صحيحة'})
             
